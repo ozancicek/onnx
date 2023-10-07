@@ -822,7 +822,7 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             OPTIONAL_VALUE)
         .Attr(
             "nodes_modes",
-            "The node kind, that is, the comparison to make at the node. There is no comparison to make at a leaf node.<br>One of 'BRANCH_LEQ', 'BRANCH_LT', 'BRANCH_GTE', 'BRANCH_GT', 'BRANCH_EQ', 'BRANCH_NEQ', 'LEAF'",
+            "The node kind, that is, the comparison to make at the node. There is no comparison to make at a leaf node.<br>One of 'BRANCH_LEQ', 'BRANCH_LT', 'BRANCH_GTE', 'BRANCH_GT', 'BRANCH_EQ', 'BRANCH_NEQ', 'BRANCH_CONTAINS', 'LEAF'",
             AttributeProto::STRINGS,
             OPTIONAL_VALUE)
         .Attr("nodes_truenodeids", "Child node if expression is true.", AttributeProto::INTS, OPTIONAL_VALUE)
@@ -867,25 +867,21 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             AttributeProto::TENSOR,
             OPTIONAL_VALUE)
         .Attr(
-            "categorical_nodes_row_splits",
-            "Categorical nodes row indexes vector",
-            AttributeProto::INTS,
-            OPTIONAL_VALUE)
-        .Attr(
-            "categorical_nodes_values",
-            "Categorical nodes ragged values",
+            "set_nodes_values",
+            "Concatenated set thresholds to do the splitting on for each node. Each node may have an arbitrary number of set thresholds, set_nodes_offsets determines node ids of these thresholds",
             AttributeProto::FLOATS,
             OPTIONAL_VALUE
         )
         .Attr(
-            "categorical_nodes_row_splits_as_tensor",
-            "Categorical nodes row indexes vector",
+            "set_nodes_values_as_tensor",
+            "Concatenated set thresholds to do the splitting on for each node. Each node may have an arbitrary number of set thresholds, set_nodes_offsets determines node ids of these thresholds",
             AttributeProto::TENSOR,
-            OPTIONAL_VALUE)
+            OPTIONAL_VALUE
+        )
         .Attr(
-            "categorical_nodes_values_as_tensor",
-            "Categorical nodes ragged values",
-            AttributeProto::TENSOR,
+            "set_nodes_offsets",
+            "1D offset vector with shape (nnodes + 1). Determines the node idx for each threhsold in set_nodes_values. For example, given this ragged threshold list [[1, 2], [], [3]], values would be [1, 2, 3] and offsets would be [0, 2, 2, 3]",
+            AttributeProto::INTS,
             OPTIONAL_VALUE
         )
         .TypeAndShapeInferenceFunction([](InferenceContext& ctx) {
@@ -897,10 +893,8 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           auto* class_weights_as_tensor = ctx.getAttribute("class_weights_as_tensor");
           auto* base_values = ctx.getAttribute("base_values");
           auto* base_values_as_tensor = ctx.getAttribute("base_values_as_tensor");
-          auto* categorical_nodes_values = ctx.getAttribute("categorical_nodes_values");
-          auto* categorical_nodes_values_as_tensor = ctx.getAttribute("categorical_nodes_values_as_tensor");
-          auto* categorical_nodes_row_splits = ctx.getAttribute("categorical_nodes_row_splits");
-          auto* categorical_nodes_row_splits_as_tensor = ctx.getAttribute("categorical_nodes_row_splits_as_tensor");
+          auto* set_nodes_values = ctx.getAttribute("set_nodes_values");
+          auto* set_nodes_values_as_tensor = ctx.getAttribute("set_nodes_values_as_tensor");
 
           if (nullptr != nodes_values && nullptr != nodes_values_as_tensor) {
             fail_shape_inference(
@@ -918,13 +912,9 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             fail_shape_inference(
                 "Only one of the attributes 'base_values', 'base_values_as_tensor' should be specified.");
           }
-          if (nullptr != categorical_nodes_values && nullptr != categorical_nodes_values_as_tensor) {
+          if (nullptr != set_nodes_values && nullptr != set_nodes_values_as_tensor) {
             fail_shape_inference(
-                "Only one of the attributes 'categorical_nodes_values', 'categorical_nodes_values_as_tensor' should be specified.");
-          }
-          if (nullptr != categorical_nodes_row_splits && nullptr != categorical_nodes_row_splits) {
-            fail_shape_inference(
-                "Only one of the attributes 'categorical_nodes_row_splits', 'categorical_nodes_row_splits_as_tensor' should be specified.");
+                "Only one of the attributes 'set_nodes_values', 'set_nodes_values_as_tensor' should be specified.");
           }
 
           std::vector<std::string> classlabels_strings;
@@ -1010,7 +1000,7 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             OPTIONAL_VALUE)
         .Attr(
             "nodes_modes",
-            "The node kind, that is, the comparison to make at the node. There is no comparison to make at a leaf node.<br>One of 'BRANCH_LEQ', 'BRANCH_LT', 'BRANCH_GTE', 'BRANCH_GT', 'BRANCH_EQ', 'BRANCH_NEQ', 'LEAF'",
+            "The node kind, that is, the comparison to make at the node. There is no comparison to make at a leaf node.<br>One of 'BRANCH_LEQ', 'BRANCH_LT', 'BRANCH_GTE', 'BRANCH_GT', 'BRANCH_EQ', 'BRANCH_NEQ', 'BRANCH_CONTAINS', 'LEAF'",
             AttributeProto::STRINGS,
             OPTIONAL_VALUE)
         .Attr("nodes_truenodeids", "Child node if expression is true", AttributeProto::INTS, OPTIONAL_VALUE)
@@ -1047,25 +1037,21 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             AttributeProto::TENSOR,
             OPTIONAL_VALUE)
         .Attr(
-            "categorical_nodes_row_splits",
-            "Categorical nodes row indexes vector",
-            AttributeProto::INTS,
-            OPTIONAL_VALUE)
-        .Attr(
-            "categorical_nodes_values",
-            "Categorical nodes ragged values",
+            "set_nodes_values",
+            "Concatenated set thresholds to do the splitting on for each node. Each node may have an arbitrary number of set thresholds, set_nodes_offsets determines node ids of these thresholds",
             AttributeProto::FLOATS,
             OPTIONAL_VALUE
         )
         .Attr(
-            "categorical_nodes_row_splits_as_tensor",
-            "Categorical nodes row indexes vector",
+            "set_nodes_values_as_tensor",
+            "Concatenated set thresholds to do the splitting on for each node. Each node may have an arbitrary number of set thresholds, set_nodes_offsets determines node ids of these thresholds",
             AttributeProto::TENSOR,
-            OPTIONAL_VALUE)
+            OPTIONAL_VALUE
+        )
         .Attr(
-            "categorical_nodes_values_as_tensor",
-            "Categorical nodes ragged values",
-            AttributeProto::TENSOR,
+            "set_nodes_offsets",
+            "1D offset vector with shape (nnodes + 1). Determines the node idx for each threhsold in set_nodes_values. For example, given this ragged threshold list [[1, 2], [], [3]], values would be [1, 2, 3] and offsets would be [0, 2, 2, 3]",
+            AttributeProto::INTS,
             OPTIONAL_VALUE
         )
         .TypeAndShapeInferenceFunction([](InferenceContext& ctx) {
@@ -1077,10 +1063,8 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           auto* target_weights_as_tensor = ctx.getAttribute("target_weights_as_tensor");
           auto* base_values = ctx.getAttribute("base_values");
           auto* base_values_as_tensor = ctx.getAttribute("base_values_as_tensor");
-          auto* categorical_nodes_values = ctx.getAttribute("categorical_nodes_values");
-          auto* categorical_nodes_values_as_tensor = ctx.getAttribute("categorical_nodes_values_as_tensor");
-          auto* categorical_nodes_row_splits = ctx.getAttribute("categorical_nodes_row_splits");
-          auto* categorical_nodes_row_splits_as_tensor = ctx.getAttribute("categorical_nodes_row_splits_as_tensor");
+          auto* set_nodes_values = ctx.getAttribute("set_nodes_values");
+          auto* set_nodes_values_as_tensor = ctx.getAttribute("set_nodes_values_as_tensor");
 
           if (nullptr != nodes_values && nullptr != nodes_values_as_tensor) {
             fail_shape_inference(
@@ -1098,13 +1082,9 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             fail_shape_inference(
                 "Only one of the attributes 'base_values', 'base_values_as_tensor' should be specified.");
           }
-          if (nullptr != categorical_nodes_values && nullptr != categorical_nodes_values_as_tensor) {
+          if (nullptr != set_nodes_values && nullptr != set_nodes_values_as_tensor) {
             fail_shape_inference(
-                "Only one of the attributes 'categorical_nodes_values', 'categorical_nodes_values_as_tensor' should be specified.");
-          }
-          if (nullptr != categorical_nodes_row_splits && nullptr != categorical_nodes_row_splits) {
-            fail_shape_inference(
-                "Only one of the attributes 'categorical_nodes_row_splits', 'categorical_nodes_row_splits_as_tensor' should be specified.");
+                "Only one of the attributes 'set_nodes_values', 'set_nodes_values_as_tensor' should be specified.");
           }
 
           checkInputRank(ctx, 0, 2);
