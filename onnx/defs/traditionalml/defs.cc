@@ -763,7 +763,7 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             std::string("NONE"))
         .Attr("rho", "", AttributeProto::FLOATS, OPTIONAL_VALUE));
 
-static const char* TreeEnsembleClassifier_ver3_doc = R"DOC(
+static const char* TreeEnsembleClassifier_ver5_doc = R"DOC(
     Tree Ensemble classifier. Returns the top class for each of N inputs.<br>
     The attributes named 'nodes_X' form a sequence of tuples, associated by
     index into the sequences, which must all be of equal length. These tuples
@@ -779,9 +779,9 @@ static const char* TreeEnsembleClassifier_ver3_doc = R"DOC(
 
 ONNX_ML_OPERATOR_SET_SCHEMA(
     TreeEnsembleClassifier,
-    3,
+    5,
     OpSchema()
-        .SetDoc(TreeEnsembleClassifier_ver3_doc)
+        .SetDoc(TreeEnsembleClassifier_ver5_doc)
         .Input(0, "X", "Input of shape [N,F]", "T1")
         .Output(0, "Y", "N, Top class for each point", "T2")
         .Output(1, "Z", "The class score for each class, for each point, a tensor of shape [N,E].", "tensor(float)")
@@ -866,6 +866,28 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             "Base values for classification, added to final class score; the size must be the same as the classes or can be left unassigned (assumed 0)",
             AttributeProto::TENSOR,
             OPTIONAL_VALUE)
+        .Attr(
+            "categorical_nodes_row_splits",
+            "Categorical nodes row indexes vector",
+            AttributeProto::INTS,
+            OPTIONAL_VALUE)
+        .Attr(
+            "categorical_nodes_values",
+            "Categorical nodes ragged values",
+            AttributeProto::FLOATS,
+            OPTIONAL_VALUE
+        )
+        .Attr(
+            "categorical_nodes_row_splits_as_tensor",
+            "Categorical nodes row indexes vector",
+            AttributeProto::TENSOR,
+            OPTIONAL_VALUE)
+        .Attr(
+            "categorical_nodes_values_as_tensor",
+            "Categorical nodes ragged values",
+            AttributeProto::TENSOR,
+            OPTIONAL_VALUE
+        )
         .TypeAndShapeInferenceFunction([](InferenceContext& ctx) {
           auto* nodes_values = ctx.getAttribute("nodes_values");
           auto* nodes_values_as_tensor = ctx.getAttribute("nodes_values_as_tensor");
@@ -875,6 +897,10 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           auto* class_weights_as_tensor = ctx.getAttribute("class_weights_as_tensor");
           auto* base_values = ctx.getAttribute("base_values");
           auto* base_values_as_tensor = ctx.getAttribute("base_values_as_tensor");
+          auto* categorical_nodes_values = ctx.getAttribute("categorical_nodes_values");
+          auto* categorical_nodes_values_as_tensor = ctx.getAttribute("categorical_nodes_values_as_tensor");
+          auto* categorical_nodes_row_splits = ctx.getAttribute("categorical_nodes_row_splits");
+          auto* categorical_nodes_row_splits_as_tensor = ctx.getAttribute("categorical_nodes_row_splits_as_tensor");
 
           if (nullptr != nodes_values && nullptr != nodes_values_as_tensor) {
             fail_shape_inference(
@@ -891,6 +917,14 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           if (nullptr != base_values && nullptr != base_values_as_tensor) {
             fail_shape_inference(
                 "Only one of the attributes 'base_values', 'base_values_as_tensor' should be specified.");
+          }
+          if (nullptr != categorical_nodes_values && nullptr != categorical_nodes_values_as_tensor) {
+            fail_shape_inference(
+                "Only one of the attributes 'categorical_nodes_values', 'categorical_nodes_values_as_tensor' should be specified.");
+          }
+          if (nullptr != categorical_nodes_row_splits && nullptr != categorical_nodes_row_splits) {
+            fail_shape_inference(
+                "Only one of the attributes 'categorical_nodes_row_splits', 'categorical_nodes_row_splits_as_tensor' should be specified.");
           }
 
           std::vector<std::string> classlabels_strings;
@@ -921,7 +955,7 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           updateOutputShape(ctx, 1, {N, E});
         }));
 
-static const char* TreeEnsembleRegressor_ver3_doc = R"DOC(
+static const char* TreeEnsembleRegressor_ver5_doc = R"DOC(
     Tree Ensemble regressor.  Returns the regressed values for each input in N.<br>
     All args with nodes_ are fields of a tuple of tree nodes, and
     it is assumed they are the same length, and an index i will decode the
@@ -938,9 +972,9 @@ static const char* TreeEnsembleRegressor_ver3_doc = R"DOC(
 
 ONNX_ML_OPERATOR_SET_SCHEMA(
     TreeEnsembleRegressor,
-    3,
+    5,
     OpSchema()
-        .SetDoc(TreeEnsembleRegressor_ver3_doc)
+        .SetDoc(TreeEnsembleRegressor_ver5_doc)
         .Input(0, "X", "Input of shape [N,F]", "T")
         .Output(0, "Y", "N classes", "tensor(float)")
         .TypeConstraint(
@@ -1012,6 +1046,28 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
             "Base values for classification, added to final class score; the size must be the same as the classes or can be left unassigned (assumed 0)",
             AttributeProto::TENSOR,
             OPTIONAL_VALUE)
+        .Attr(
+            "categorical_nodes_row_splits",
+            "Categorical nodes row indexes vector",
+            AttributeProto::INTS,
+            OPTIONAL_VALUE)
+        .Attr(
+            "categorical_nodes_values",
+            "Categorical nodes ragged values",
+            AttributeProto::FLOATS,
+            OPTIONAL_VALUE
+        )
+        .Attr(
+            "categorical_nodes_row_splits_as_tensor",
+            "Categorical nodes row indexes vector",
+            AttributeProto::TENSOR,
+            OPTIONAL_VALUE)
+        .Attr(
+            "categorical_nodes_values_as_tensor",
+            "Categorical nodes ragged values",
+            AttributeProto::TENSOR,
+            OPTIONAL_VALUE
+        )
         .TypeAndShapeInferenceFunction([](InferenceContext& ctx) {
           auto* nodes_values = ctx.getAttribute("nodes_values");
           auto* nodes_values_as_tensor = ctx.getAttribute("nodes_values_as_tensor");
@@ -1021,6 +1077,10 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           auto* target_weights_as_tensor = ctx.getAttribute("target_weights_as_tensor");
           auto* base_values = ctx.getAttribute("base_values");
           auto* base_values_as_tensor = ctx.getAttribute("base_values_as_tensor");
+          auto* categorical_nodes_values = ctx.getAttribute("categorical_nodes_values");
+          auto* categorical_nodes_values_as_tensor = ctx.getAttribute("categorical_nodes_values_as_tensor");
+          auto* categorical_nodes_row_splits = ctx.getAttribute("categorical_nodes_row_splits");
+          auto* categorical_nodes_row_splits_as_tensor = ctx.getAttribute("categorical_nodes_row_splits_as_tensor");
 
           if (nullptr != nodes_values && nullptr != nodes_values_as_tensor) {
             fail_shape_inference(
@@ -1037,6 +1097,14 @@ ONNX_ML_OPERATOR_SET_SCHEMA(
           if (nullptr != base_values && nullptr != base_values_as_tensor) {
             fail_shape_inference(
                 "Only one of the attributes 'base_values', 'base_values_as_tensor' should be specified.");
+          }
+          if (nullptr != categorical_nodes_values && nullptr != categorical_nodes_values_as_tensor) {
+            fail_shape_inference(
+                "Only one of the attributes 'categorical_nodes_values', 'categorical_nodes_values_as_tensor' should be specified.");
+          }
+          if (nullptr != categorical_nodes_row_splits && nullptr != categorical_nodes_row_splits) {
+            fail_shape_inference(
+                "Only one of the attributes 'categorical_nodes_row_splits', 'categorical_nodes_row_splits_as_tensor' should be specified.");
           }
 
           checkInputRank(ctx, 0, 2);
